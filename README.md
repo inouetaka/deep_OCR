@@ -8,7 +8,7 @@
 # シーンテキスト認識モデルの比較、データセットおよびモデル分析では、何が間違っているか?	
 大半の既存STRモデルが採用されている4段階のSTRフレームワークの公式PyTorch実装により、一貫したトレーニングと評価データセットの下で、精度、スピード、メモリ需要の面でモジュールごとに性能に貢献することが可能となり、現在の比較に対する障害を解消し、既存のモジュールの性能利得を理解することができます。   
 <br><br>
-<img src="./figure/trade-off.jpg" width="1000" title="trade-off">
+<img src="./figure/trade-off.png" width="1000" title="trade-off">
 
 # Getting Started
 ## 依存関係
