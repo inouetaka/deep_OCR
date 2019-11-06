@@ -37,10 +37,6 @@ def gen_resize_img(path, opt):
         new_image = np.concatenate([w_resize_img, bgr], 1)
         print('before:{} => middle:{} => after:{}'.format(img.shape, resize_img.shape, new_image.shape))
 
-    else:
-        print(resize_img.shape)
-        print("どっちにも引っかかってないよ")
-
     return new_image
 
 
