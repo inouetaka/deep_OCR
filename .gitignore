@@ -5,3 +5,5 @@ __pycache_/_
 *.jpg
 */*.h5
 *.png
+.idea
+
