@@ -70,7 +70,7 @@ __2019/09/06現在、テスト結果は3割ぐらい正解__ ==> Model:None-VGG-
 
 ## [ここ](https://drive.google.com/drive/folders/1W84gS9T5GU5l5Wp3VV1aeXIIKV87yjRm)からダウンロードした故障ケースと洗浄したラベル
 image_release.zipには、不具合事例画像と、清浄化されたラベルを持つベンチマーク評価画像が含まれています。   
-<img src="./figure/failure-case.jpg" width="1000" title="failure cases">
+<img src="./figure/failure-case.png" width="1000" title="failure cases">
 
 # 引数
     parser.add_argument('--experiment_name', help='Where to store logs and models')
