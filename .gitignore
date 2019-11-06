@@ -8,3 +8,4 @@ __pycache_/_
 .idea
 *.out
 !PaperImage/*.png
+!figure/*.png
