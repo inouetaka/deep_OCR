@@ -1,0 +1,7 @@
+*.pth
+.DS_Store
+*.mdb
+__pycache_/_
+*.jpg
+*/*.h5
+*.png
