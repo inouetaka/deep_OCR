@@ -3,9 +3,6 @@
 import string
 import argparse
 
-import string
-import argparse
-
 import torch
 import torch.backends.cudnn as cudnn
 import torch.utils.data
@@ -13,8 +10,8 @@ import torch.utils.data
 from utils import CTCLabelConverter, AttnLabelConverter
 from dataset import RawDataset, AlignCollate
 from model import Model
-#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device='cpu'
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 def demo(opt):
     """ model configuration """
@@ -34,9 +31,8 @@ def demo(opt):
 
     # load model
     print('loading pretrained model from %s' % opt.saved_model)
-    model.load_state_dict(torch.load(opt.saved_model, map_location=device))
+    model.load_state_dict(torch.load(opt.saved_model))
 
-    # prepare data. two demo images from https://github.com/bgshih/crnn#run-demo
     AlignCollate_demo = AlignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio_with_pad=opt.PAD)
     demo_data = RawDataset(root=opt.image_folder, opt=opt)  # use RawDataset
     demo_loader = torch.utils.data.DataLoader(
@@ -51,14 +47,14 @@ def demo(opt):
         for image_tensors, image_path_list in demo_loader:
             batch_size = image_tensors.size(0)
             image = image_tensors.to(device)
-            # For max length prediction
+            # 最大長予測用
             length_for_pred = torch.IntTensor([opt.batch_max_length] * batch_size).to(device)
             text_for_pred = torch.LongTensor(batch_size, opt.batch_max_length + 1).fill_(0).to(device)
 
             if 'CTC' in opt.Prediction:
                 preds = model(image, text_for_pred).log_softmax(2)
 
-                # Select max probabilty (greedy decoding) then decode index to character
+                # 最大確率を選択し、インデックスを文字にデコードします
                 preds_size = torch.IntTensor([preds.size(1)] * batch_size)
                 _, preds_index = preds.permute(1, 0, 2).max(2)
                 preds_index = preds_index.transpose(1, 0).contiguous().view(-1)
@@ -67,7 +63,7 @@ def demo(opt):
             else:
                 preds = model(image, text_for_pred, is_train=False)
 
-                # select max probabilty (greedy decoding) then decode index to character
+                # 最大確率を選択し、インデックスを文字にデコードします
                 _, preds_index = preds.max(2)
                 preds_str = converter.decode(preds_index, length_for_pred)
 
@@ -76,7 +72,7 @@ def demo(opt):
             print('-' * 80)
             for img_name, pred in zip(image_path_list, preds_str):
                 if 'Attn' in opt.Prediction:
-                    pred = pred[:pred.find('[s]')]  # prune after "end of sentence" token ([s])
+                    pred = pred[:pred.find('[s]')]  # 文の終わりトークン（[s]）の後の剪定
 
                 print(f'{img_name}\t{pred}')
 
@@ -110,9 +106,8 @@ if __name__ == '__main__':
 
     """ vocab / character number configuration """
     if opt.sensitive:
-        #opt.character = string.printable[:-6]  # same with ASTER setting (use 94 char).
-        with open("japanese_word/japanese_word.txt", "r")as ja:
-            opt.character = ja.read()
+        opt.character = string.printable[:-6]  # same with ASTER setting (use 94 char).
+
     cudnn.benchmark = True
     cudnn.deterministic = True
     opt.num_gpu = torch.cuda.device_count()
