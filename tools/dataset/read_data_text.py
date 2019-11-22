@@ -49,6 +49,7 @@ def main(input_path, output_path, split_per, data_split):
         train = dict(zip(train_l, train_i))
         test = dict(zip(test_l, test_i))
         valid = dict(zip(valid_l, valid_i))
+
         for tr_k in train.keys():
             with open('{}/train/train_text.txt'.format(output_path), mode='a') as txt:
                 txt.writelines('{}\t{}\n'.format(f'{train[tr_k]}.png', tr_k))
