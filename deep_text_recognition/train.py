@@ -15,6 +15,7 @@ import torch.nn.init as init
 import torch.optim as optim
 import torch.utils.data
 import numpy as np
+import pandas as pd
 
 from utils import CTCLabelConverter, AttnLabelConverter, Averager
 from dataset import hierarchical_dataset, AlignCollate, Batch_Balanced_Dataset
@@ -115,6 +116,8 @@ def train(opt):
     """ start training """
     start_iter = 0
     if opt.continue_model != '':
+        print(opt.continue_model.split('_')[-1])
+        print(opt.continue_model.split('_')[-1].split('.')[0])
         start_iter = int(opt.continue_model.split('_')[-1].split('.')[0])
         print(f'continue to train, start_iter: {start_iter}')
 
@@ -131,9 +134,9 @@ def train(opt):
     while(True):
         # train part
         image_tensors, labels = train_dataset.get_batch()
-        np_image = image_tensors.cpu().detach().numpy()
-        print(type(np_image))
-        np_img_list.append(np_image)
+        #np_image = image_tensors.cpu().detach().numpy()
+        #print(type(np_image))
+        #np_img_list.append(np_image)
         image = image_tensors.to(device)
         text, length = converter.encode(labels, batch_max_length=opt.batch_max_length)
         batch_size = image.size(0)
@@ -165,6 +168,7 @@ def train(opt):
         # validation part
         if i % opt.valInterval == 0:
             train_loss_list.append(cost)
+            epoch_list.append(i)
             elapsed_time = time.time() - start_time
             print(f'[{i}/{opt.num_iter}] Loss: {loss_avg.val():0.5f} elapsed_time: {elapsed_time:0.5f}')
             # for log
@@ -203,7 +207,7 @@ def train(opt):
                 log.write(best_model_log + '\n')
 
         # save model per 1e+5 iter.
-        if (i + 1) % 1e+5 == 0:
+        if (i + 1) % 1e+3 == 0:
             torch.save(
                 model.state_dict(), f'./saved_models/{opt.experiment_name}/iter_{i+1}.pth')
 
@@ -212,25 +216,34 @@ def train(opt):
             sys.exit()
         i += 1
 
-        with open("./train_loss.txt", mode="w") as f:
+        df = pd.DataFrame()
+        with open(f"./{opt.experiment_name}_train_loss.txt", mode="w") as f:
             for t_loss in train_loss_list:
                 f.write(str(t_loss.item()) + "\n")
-        with open("./valid_loss.txt", mode="w") as f:
+                df['train_loss'] = t_loss.item()
+        with open(f"./{opt.experiment_name}_valid_loss.txt", mode="w") as f:
             for v_loss in valid_loss_list:
                 f.write(str(v_loss.item()) + "\n")
-        with open("./valid_acc.txt", mode="w")as f:
+                df['valid_loss'] = v_loss.item()
+        with open(f"./{opt.experiment_name}_valid_acc.txt", mode="w")as f:
             for v_acc in valid_acc_list:
                 f.write(str(v_acc) + "\n")
+                df['acc'] = v_acc
+        with open(f"./{opt.experiment_name}_epoch_list.txt", mode="w")as f:
+            for epoch in epoch_list:
+                f.write(str(epoch) + "\n")
+                df['epoch'] = epoch
 
-        np.save("numpy_image", np_img_list)
+        #np.save("numpy_image", np_img_list)
 
+        df_sub = pd.DataFrame()
+        df_sub['epoch'] = epoch_list
+        df_sub['train_loss'] = train_loss_list
+        df_sub['valid_loss'] = valid_loss_list
+        df_sub['acc'] = valid_acc_list
 
-        plt.plot(epoch_list, train_loss_list, label="train_loss")
-        plt.plot(epoch_list, valid_loss_list, label="valid_loss")
-        plt.xlabel("epoch")
-        plt.ylabel("loss")
-        plt.legend(loc="best")
-        plt.savefig(f"./{opt.experiment_name}_loss.png")
+        df.to_csv(f"./{opt.experiment_name}_log.csv")
+        df_sub.to_csv(f"./{opt.experiment_name}_sub_log.csv")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -307,13 +320,15 @@ if __name__ == '__main__':
         print('if you stuck too long time with multi-GPU setting, try to set --workers 0')
         # check multi-GPU issue https://github.com/clovaai/deep-text-recognition-benchmark/issues/1
         opt.workers = opt.workers * opt.num_gpu
-
-        """ 前のバージョン
-         print（ 'バッチ統計を1-GPU設定に等しくするには、batch_sizeをnum_gpuで乗算し、batch_sizeを乗算するには'、opt.batch_size）
-         opt.batch_size = opt.batch_size * opt.num_gpu
-         print（「エポック数を1-GPU設定に等しくするために、num_iterはデフォルトでnum_gpuで除算されます。」）
-         気にしない場合は、これらの行をコメントアウトしてください。）
-         opt.num_iter = int（opt.num_iter / opt.num_gpu）
-        """
+        opt.batch_size = opt.batch_size * opt.num_gpu
+  
+ 
+    """ 前のバージョン
+    print（ 'バッチ統計を1-GPU設定に等しくするには、batch_sizeをnum_gpuで乗算し、batch_sizeを乗算するには'、opt.batch_size）
+    opt.batch_size = opt.batch_size * opt.num_gpu
+    print（「エポック数を1-GPU設定に等しくするために、num_iterはデフォルトでnum_gpuで除算されます。」）
+    気にしない場合は、これらの行をコメントアウトしてください。）
+    opt.num_iter = int（opt.num_iter / opt.num_gpu）
+    """
 
     train(opt)
