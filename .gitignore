@@ -7,5 +7,7 @@ __pycache_/_
 *.png
 .idea
 *.out
+*.pyc
+
 !PaperImage/*.png
 !figure/*.png
