@@ -7,10 +7,12 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.utils.data
+import os
 
 from utils import CTCLabelConverter, AttnLabelConverter
 from dataset import RawDataset, AlignCollate
 from model import Model
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device ="cpu"
 
