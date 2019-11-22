@@ -225,7 +225,7 @@ class RawDataset(Dataset):
                 img = Image.new('RGB', (self.opt.imgW, self.opt.imgH))
             else:
                 img = Image.new('L', (self.opt.imgW, self.opt.imgH))
-        #print(f'img:{img}\nimage_path_list:{self.image_path_list}')
+
         return (img, self.image_path_list[index])
 
 
@@ -274,7 +274,6 @@ class AlignCollate(object):
         batch = filter(lambda x: x is not None, batch)
         images, labels = zip(*batch)
 
-
         if self.keep_ratio_with_pad:  # Rosetta論文と同じコンセプト
             resized_max_w = self.imgW
             transform = NormalizePAD((1, self.imgH, resized_max_w))
@@ -290,7 +289,7 @@ class AlignCollate(object):
 
                 resized_image = image.resize((resized_w, self.imgH), Image.BICUBIC)
                 resized_images.append(transform(resized_image))
-                # resized_image.save('./image_test/%d_test.jpg' % w)
+                resized_image.save('./image_test/%d_test.jpg' % w)
 
             image_tensors = torch.cat([t.unsqueeze(0) for t in resized_images], 0)
 
@@ -298,13 +297,7 @@ class AlignCollate(object):
             transform = ResizeNormalize((self.imgW, self.imgH))
             image_tensors = [transform(image) for image in images]
             image_tensors = torch.cat([t.unsqueeze(0) for t in image_tensors], 0)
-
-        """
-        print(f'image_tensors:{image_tensors}, labels:{labels}')
-        print(type(image_tensors))
-        print(image_tensors.shape)
-        """
-
+        
         return image_tensors, labels
 
 
