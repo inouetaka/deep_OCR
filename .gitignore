@@ -1,7 +1,7 @@
 *.pth
 .DS_Store
 *.mdb
-__pycache_/_
+/__pycache__
 *.jpg
 *.h5
 *.png
