@@ -1,3 +1,4 @@
+# file
 *.pth
 .DS_Store
 *.mdb
@@ -8,6 +9,9 @@
 .idea
 *.out
 *.pyc
+
+# folder
+deep_text_recognition/saved_model/*
 
 !PaperImage/*.png
 !figure/*.png
