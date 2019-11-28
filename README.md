@@ -1,10 +1,4 @@
 # ToDo
-- [ ] 汎化性能チェック
-- [ ] --characterで日本語テキストを参照するようにする
-- [ ] 編集距離を表示する
-- [ ] Rosettaモデルで学習-テスト
-- [ ] STAR-Netモデルで学習-テスト
-
 # シーンテキスト認識モデルの比較、データセットおよびモデル分析では、何が間違っているか?	
 大半の既存STRモデルが採用されている4段階のSTRフレームワークの公式PyTorch実装により、一貫したトレーニングと評価データセットの下で、精度、スピード、メモリ需要の面でモジュールごとに性能に貢献することが可能となり、現在の比較に対する障害を解消し、既存のモジュールの性能利得を理解することができます。   
 <br><br>
@@ -127,9 +121,3 @@ test/word_2.png kills
 test/word_3.png A
 ...
 ```
-
-## グランドトゥルースの正規化
-`python3 text_normalize.py --inputpath data/SynthText800000/train_text.txt --outputpath data/SynthText_800000_normalize \
- --output_file_name normalized_train_text.txt`
- 
- グランドトゥルースを**NFKC**で正規化する。
