@@ -3,15 +3,14 @@ import numpy as np
 
 
 def main(input_path, output_path, split_per, data_split):
-    db = h5py.File(input_path)['data']
+    db = h5py.File(input_path, 'r')['data']
     os.makedirs(output_path, exist_ok=True)
     os.makedirs(f'{output_path}/train', exist_ok=True)
     os.makedirs(f'{output_path}/test', exist_ok=True)
     os.makedirs(f'{output_path}/valid', exist_ok=True)
     label_list = []
     image_list = []
-    for o, k in enumerate(db.keys(), len(range(100))):
-        print(o)
+    for k in db.keys():
         d = db[k]
         print('*-' * 45)
         print(f'extracting {k}...')
@@ -49,7 +48,6 @@ def main(input_path, output_path, split_per, data_split):
         train = dict(zip(train_l, train_i))
         test = dict(zip(test_l, test_i))
         valid = dict(zip(valid_l, valid_i))
-
         for tr_k in train.keys():
             with open('{}/train/train_text.txt'.format(output_path), mode='a') as txt:
                 txt.writelines('{}\t{}\n'.format(f'{train[tr_k]}.png', tr_k))
