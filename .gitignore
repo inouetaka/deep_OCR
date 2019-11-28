@@ -9,9 +9,10 @@
 .idea
 *.out
 *.pyc
+*.txt
 
 # folder
-deep_text_recognition/saved_model/*
+
 
 !PaperImage/*.png
 !figure/*.png

@@ -1,0 +1,88 @@
+[49000/50000] Loss: 0.00085 elapsed_time: 8.79227
+フパ東                 , gt: フパ東                 ,   True
+てと文ラと               , gt: てと文ラと               ,   True
+くので                 , gt: くので                 ,   True
+レ毛そ的0ン              , gt: レ毛そ的Oン              ,   False
+よ理治鉄                , gt: よ理治鉄                ,   True
+[49000/50000] valid loss: 0.13203 accuracy: 91.798, norm_ED: 3447.65
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49100/50000] Loss: 0.00171 elapsed_time: 296.53362
+3ッ年年                , gt: 3ッ年年                ,   True
+テきグ針策1の             , gt: テきグ針策1の             ,   True
+外は                  , gt: 外は                  ,   True
+ワF工a                , gt: ワFエa                ,   False
+くッ頭3ン技い             , gt: くッ頸3ン技い             ,   False
+[49100/50000] valid loss: 0.13010 accuracy: 91.565, norm_ED: 3522.45
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49200/50000] Loss: 0.00187 elapsed_time: 572.30418
+枚ントiルのう             , gt: 枚ントiルのう             ,   True
+残鉄るでる定こ             , gt: 残鉄るでる定こ             ,   True
+部基                  , gt: 部基                  ,   True
+ン度道の                , gt: ン度道の                ,   True
+シばピと                , gt: シばピと                ,   True
+[49200/50000] valid loss: 0.13159 accuracy: 91.767, norm_ED: 3459.04
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49300/50000] Loss: 0.00157 elapsed_time: 848.72742
+ー企的繁                , gt: ー企的繁                ,   True
+階                   , gt: 階                   ,   True
+鋒えのう透T              , gt: 鋒えのう透T              ,   True
+な層                  , gt: な層                  ,   True
+さて渋3J               , gt: さて渋3J               ,   True
+[49300/50000] valid loss: 0.13094 accuracy: 91.683, norm_ED: 3500.62
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49400/50000] Loss: 0.00249 elapsed_time: 1123.25199
+か位                  , gt: か位                  ,   True
+たっアで                , gt: たっアで                ,   True
+にク代じに               , gt: にク代じに               ,   True
+5r08                , gt: 5r08                ,   True
+9化ルし                , gt: 9化ルし                ,   True
+[49400/50000] valid loss: 0.13239 accuracy: 91.660, norm_ED: 3489.15
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49500/50000] Loss: 0.00274 elapsed_time: 1398.28142
+権長に                 , gt: 権長に                 ,   True
+之やでれは日人             , gt: 之やでれは日人             ,   True
+む9るレア日や             , gt: む9るレア日や             ,   True
+8員                  , gt: 8員                  ,   True
+甲破家融で               , gt: 甲破家融で               ,   True
+[49500/50000] valid loss: 0.13632 accuracy: 91.542, norm_ED: 3584.62
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49600/50000] Loss: 0.00142 elapsed_time: 1673.97387
+後S                  , gt: 後5                  ,   False
+かをと                 , gt: かをと                 ,   True
+メ発つるー               , gt: メ発つるー               ,   True
+1139                , gt: 1139                ,   True
+山同お郎                , gt: 山同お郎                ,   True
+[49600/50000] valid loss: 0.13103 accuracy: 91.717, norm_ED: 3472.78
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49700/50000] Loss: 0.00146 elapsed_time: 1947.96063
+年5彼                 , gt: 年5彼                 ,   True
+ー認かとと               , gt: ー認かとと               ,   True
+そ物4な算用在             , gt: そ物4な算用在             ,   True
+トた任番                , gt: トた任番                ,   True
+ー伝星京                , gt: ー伝星京                ,   True
+[49700/50000] valid loss: 0.13084 accuracy: 91.776, norm_ED: 3463.87
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49800/50000] Loss: 0.00182 elapsed_time: 2223.22622
+優販いボ                , gt: 優販いボ                ,   True
+れ択ン住に命              , gt: れ択ン住に命              ,   True
+とォにナ島会              , gt: とォにナ島会              ,   True
+93a                 , gt: 93a                 ,   True
+間良あ4り               , gt: 間良あ4り               ,   True
+[49800/50000] valid loss: 0.13319 accuracy: 91.781, norm_ED: 3463.62
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[49900/50000] Loss: 0.00181 elapsed_time: 2493.37828
+大ゥデ                 , gt: 大ゥデ                 ,   True
+て警で交が8た             , gt: て警で交が8た             ,   True
+ドをの位式入              , gt: ドをの位式入              ,   True
+名て                  , gt: 名て                  ,   True
+のに意デ0の              , gt: のに意デ0の              ,   True
+[49900/50000] valid loss: 0.13465 accuracy: 91.772, norm_ED: 3465.47
+best_accuracy: 91.798, best_norm_ED: 3447.65
+[50000/50000] Loss: 0.00215 elapsed_time: 2766.27566
+にがル線際エに             , gt: にがル線続エに             ,   False
+長れ                  , gt: 長れ                  ,   True
+へしす震                , gt: へしす震                ,   True
+2ンし複                , gt: 2ンし複                ,   True
+降図                  , gt: l降図                 ,   False
+[50000/50000] valid loss: 0.13456 accuracy: 91.667, norm_ED: 3484.16
+best_accuracy: 91.798, best_norm_ED: 3447.65
