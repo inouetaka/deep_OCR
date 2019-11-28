@@ -139,6 +139,7 @@ def main():
     '--height', type=int, default=32, help='Heights of images in output singletext h5 file'
   )
   parsed_args = arg_parser.parse_args()
+  os.makedirs(parsed_args.output_path, exist_ok=True)
   extracts(parsed_args.input_path, parsed_args.output_path, parsed_args.width, parsed_args.height)
 
 if __name__ == '__main__':
