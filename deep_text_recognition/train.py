@@ -134,9 +134,6 @@ def train(opt):
     while(True):
         # train part
         image_tensors, labels = train_dataset.get_batch()
-        #np_image = image_tensors.cpu().detach().numpy()
-        #print(type(np_image))
-        #np_img_list.append(np_image)
         image = image_tensors.to(device)
         text, length = converter.encode(labels, batch_max_length=opt.batch_max_length)
         batch_size = image.size(0)
@@ -167,7 +164,7 @@ def train(opt):
 
         # validation part
         if i % opt.valInterval == 0:
-            train_loss_list.append(cost)
+            train_loss_list.append(cost.item())
             epoch_list.append(i)
             elapsed_time = time.time() - start_time
             print(f'[{i}/{opt.num_iter}] Loss: {loss_avg.val():0.5f} elapsed_time: {elapsed_time:0.5f}')
@@ -179,7 +176,7 @@ def train(opt):
                 model.eval()
                 with torch.no_grad():
                     valid_loss, current_accuracy, current_norm_ED, preds, labels, infer_time, length_of_data, _ = validation(model, criterion, valid_loader, converter, opt)
-                valid_loss_list.append(valid_loss)
+                valid_loss_list.append(valid_loss.item())
                 valid_acc_list.append(current_accuracy)
                 model.train()
 
@@ -187,7 +184,8 @@ def train(opt):
                     if 'Attn' in opt.Prediction:
                         pred = pred[:pred.find('[s]')]
                         gt = gt[:gt.find('[s]')]
-                    print(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}')
+                
+                    print(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}')    
                     log.write(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}\n')
 
                 valid_log = f'[{i}/{opt.num_iter}] valid loss: {valid_loss:0.5f}'
@@ -217,33 +215,13 @@ def train(opt):
         i += 1
 
         df = pd.DataFrame()
-        with open(f"./{opt.experiment_name}_train_loss.txt", mode="w") as f:
-            for t_loss in train_loss_list:
-                f.write(str(t_loss.item()) + "\n")
-                df['train_loss'] = t_loss.item()
-        with open(f"./{opt.experiment_name}_valid_loss.txt", mode="w") as f:
-            for v_loss in valid_loss_list:
-                f.write(str(v_loss.item()) + "\n")
-                df['valid_loss'] = v_loss.item()
-        with open(f"./{opt.experiment_name}_valid_acc.txt", mode="w")as f:
-            for v_acc in valid_acc_list:
-                f.write(str(v_acc) + "\n")
-                df['acc'] = v_acc
-        with open(f"./{opt.experiment_name}_epoch_list.txt", mode="w")as f:
-            for epoch in epoch_list:
-                f.write(str(epoch) + "\n")
-                df['epoch'] = epoch
+        df['epoch'] = epoch_list
+        df['train_loss'] = train_loss_list
+        df['valid_loss'] = valid_loss_list
+        df['acc'] = valid_acc_list
 
-        #np.save("numpy_image", np_img_list)
+        df.to_csv(f"./{opt.experiment_name}_log.csv", index=False)
 
-        df_sub = pd.DataFrame()
-        df_sub['epoch'] = epoch_list
-        df_sub['train_loss'] = train_loss_list
-        df_sub['valid_loss'] = valid_loss_list
-        df_sub['acc'] = valid_acc_list
-
-        df.to_csv(f"./{opt.experiment_name}_log.csv")
-        df_sub.to_csv(f"./{opt.experiment_name}_sub_log.csv")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -257,10 +235,10 @@ if __name__ == '__main__':
     parser.add_argument('--valInterval', type=int, default=2000, help='Interval between each validation')
     parser.add_argument('--continue_model', default='', help="path to model to continue training")
     parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is Adadelta)')
-    parser.add_argument('--lr', type=float, default=1, help='learning rate, default=1.0 for Adadelta')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--rho', type=float, default=0.95, help='decay rate rho for Adadelta. default=0.95')
     parser.add_argument('--eps', type=float, default=1e-8, help='eps for Adadelta. default=1e-8')
+    parser.add_argument('--lr', type=float, default=1, help='learning rate, default=1.0 for Adadelta')
     parser.add_argument('--grad_clip', type=float, default=5, help='gradient clipping value. default=5')
     """ Data processing """
     parser.add_argument('--select_data', type=str, default='ORIGIN',
@@ -314,21 +292,21 @@ if __name__ == '__main__':
     cudnn.benchmark = True
     cudnn.deterministic = True
     opt.num_gpu = torch.cuda.device_count()
-    # print('device count', opt.num_gpu)
+
     if opt.num_gpu > 1:
         print('------ Use multi-GPU setting ------')
         print('if you stuck too long time with multi-GPU setting, try to set --workers 0')
         # check multi-GPU issue https://github.com/clovaai/deep-text-recognition-benchmark/issues/1
         opt.workers = opt.workers * opt.num_gpu
         opt.batch_size = opt.batch_size * opt.num_gpu
-  
- 
-    """ 前のバージョン
-    print（ 'バッチ統計を1-GPU設定に等しくするには、batch_sizeをnum_gpuで乗算し、batch_sizeを乗算するには'、opt.batch_size）
-    opt.batch_size = opt.batch_size * opt.num_gpu
-    print（「エポック数を1-GPU設定に等しくするために、num_iterはデフォルトでnum_gpuで除算されます。」）
-    気にしない場合は、これらの行をコメントアウトしてください。）
-    opt.num_iter = int（opt.num_iter / opt.num_gpu）
-    """
+
+        """
+         前のバージョン
+         print（ 'バッチ統計を1-GPU設定に等しくするには、batch_sizeをnum_gpuで乗算し、batch_sizeを乗算するには'、opt.batch_size）
+         opt.batch_size = opt.batch_size * opt.num_gpu
+         print（「エポック数を1-GPU設定に等しくするために、num_iterはデフォルトでnum_gpuで除算されます。」）
+         気にしない場合は、これらの行をコメントアウトしてください。）
+         opt.num_iter = int（opt.num_iter / opt.num_gpu）
+        """
 
     train(opt)
