@@ -13,7 +13,7 @@
 # folder
 /self_write/
 /__pycache__/
-/character_crawler/
+/tools/character_crawler/
 
 !PaperImage/*.png
 !figure/*.png
