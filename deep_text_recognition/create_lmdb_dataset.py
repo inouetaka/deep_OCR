@@ -71,7 +71,7 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
         labelKey = 'label-%09d'.encode() % cnt
         cache[imageKey] = imageBin
         cache[labelKey] = label.encode()
-        if cnt % 1000 == 0:
+        if cnt % 10000 == 0:
             writeCache(env, cache)
             cache = {}
             print('書き込み中 %d / %d' % (cnt, nSamples))
