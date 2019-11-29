@@ -9,6 +9,7 @@
 *.out
 *.pyc
 *.txt
+*.csv
 
 # folder
 /self_write/
