@@ -13,8 +13,8 @@ from utils import CTCLabelConverter, AttnLabelConverter
 from dataset import RawDataset, AlignCollate
 from model import Model
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device ="cpu"
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#device ="cpu"
 
 def loader(opt):
     """ model configuration """
@@ -36,9 +36,8 @@ def loader(opt):
     print('loading pretrained model from %s' % opt.saved_model)
     model.load_state_dict(torch.load(opt.saved_model, map_location=device))
 
-    batch_size = 10
-    length_for_pred = torch.IntTensor([opt.batch_max_length] * batch_size).to(device)
-    text_for_pred = torch.LongTensor(batch_size, opt.batch_max_length + 1).fill_(0).to(device)
+    length_for_pred = torch.IntTensor([opt.batch_max_length] * opt.batch_size).to(device)
+    text_for_pred = torch.LongTensor(opt.batch_size, opt.batch_max_length + 1).fill_(0).to(device)
 
     model.eval()
     return model, converter, length_for_pred, text_for_pred
@@ -58,10 +57,10 @@ def original_demo(model, converter, length_for_pred, text_for_pred, opt):
         collate_fn=AlignCollate_demo, pin_memory=True)
 
     get_data = time.time()-start_time
-
     # predict
     with torch.no_grad():
         for image_tensors, image_path_list in demo_loader:
+            infer_start = time.time()
             batch_size = image_tensors.size(0)
             image = image_tensors.to(device)
             # 最大長予測用
@@ -80,10 +79,14 @@ def original_demo(model, converter, length_for_pred, text_for_pred, opt):
                 # 最大確率を選択し、インデックスを文字にデコードします
                 _, preds_index = preds.max(2)
                 preds_str = converter.decode(preds_index, length_for_pred)
-
+            
+            print(f"now:{time.time()}\tstart_time:{infer_start}")
+            infer_time = time.time() - infer_start
 
             print('-' * 80)
             print('image_path\tpredicted_labels')
+            print('get_dta_time:{:.5f}[sec]'.format(get_data))
+            print('infer_time:{:.5f}[sec]'.format(infer_time))
             print('-' * 80)
             for img_name, pred in zip(image_path_list, preds_str):
                 if 'Attn' in opt.Prediction:
@@ -92,11 +95,7 @@ def original_demo(model, converter, length_for_pred, text_for_pred, opt):
                 print(f'{img_name}\t{pred}')
 
         forward_time = time.time() - start_time
-        print('*' * 80)
-        print('get_dta_time:{:.5f}[sec]'.format(get_data))
-        print('only_infer_time:{:.5f}[sec]'.format(forward_time - get_data))
         print('total_time:{:.5f}[sec]'.format(forward_time))
-        print('*' * 80)
 
 
 if __name__ == '__main__':
@@ -136,5 +135,5 @@ if __name__ == '__main__':
     opt.num_gpu = torch.cuda.device_count()
 
     model, converter, length_for_pred, text_for_pred = loader(opt)
-    for i in range(5):
+    for i in range(3):
         original_demo(model, converter, length_for_pred, text_for_pred, opt)
