@@ -75,7 +75,7 @@ def train(opt):
         if opt.FT:
             model.load_state_dict(torch.load(opt.saved_model), strict=False)
         else:
-            model.load_state_dict(torch.load(opt.continue_model))
+            model.load_state_dict(torch.load(opt.saved_model))
     #print("Model:")
     #print(model)
 
