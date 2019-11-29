@@ -193,6 +193,7 @@ def test(opt):
 
     """ evaluation """
     model.eval()
+    start = time.time()
     with torch.no_grad():
         if opt.benchmark_all_eval:  # evaluation with 10 benchmark evaluation datasets
             benchmark_all_eval(model, criterion, converter, opt)
@@ -204,11 +205,21 @@ def test(opt):
                 shuffle=False,
                 num_workers=int(opt.workers),
                 collate_fn=AlignCollate_evaluation, pin_memory=True)
+            get_data = time.time() - start
             _, accuracy_by_best_model, norm_ED, _, _, _, _, _, forward_time_list = validation(
                 model, criterion, evaluation_loader, converter, opt)
+
+            forward_time = time.time() - start
+
             print(f'acc:{accuracy_by_best_model}')
             with open('./result/{0}/log_evaluation.txt'.format(opt.experiment_name), 'a') as log:
                 log.write(str(accuracy_by_best_model) + '\n')
+
+        print('*' * 80)
+        print('get_dta_time:{:.5f}[sec]'.format(get_data))
+        print('only_infer_time:{:.5f}[sec]'.format(forward_time - get_data))
+        print('total_time:{:.5f}[sec]'.format(forward_time))
+        print('*' * 80)
 
 
 if __name__ == '__main__':
