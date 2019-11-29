@@ -88,7 +88,6 @@ def validation(model, criterion, evaluation_loader, converter, opt):
     norm_ED = 0
     length_of_data = 0
     infer_time = 0
-    origin_edit = 0
     valid_loss_avg = Averager()
     pred_list = []
     gt_list = []
@@ -139,7 +138,7 @@ def validation(model, criterion, evaluation_loader, converter, opt):
         valid_loss_avg.add(cost)
 
         # calculate accuracy.
-        ED_list = []
+        sum_ed = 0
         for pred, gt in zip(preds_str, labels):
             if 'Attn' in opt.Prediction:
                 pred = pred[:pred.find('[s]')]  # prune after "end of sentence" token ([s])
@@ -148,16 +147,14 @@ def validation(model, criterion, evaluation_loader, converter, opt):
                 n_correct += 1
             if len(gt) == 0:
                 norm_ED += 1
-                ED_list.append(1)
             else:
                 edit = edit_distance(pred, gt) / len(gt)
                 norm_ED += edit
-                ED_list.append(edit)
 
-            origin_edit += edit_distance(pred, gt) / max([len(pred), len(gt)])
-
-        #levenshtein = 1 - (1 / max([len(preds_str), len(labels)])) * (origin_edit)
-        levenshtein = 1 - (sum(ED_list) / len(labels))
+            edit = edit_distance(pred, gt)
+            max_len = max(len(pred), len(gt))
+            sum_ed += edit / max_len
+        levenshtein = 1 - (1 / max([len(preds_str), len(labels)])) * sum_ed
     print(f'infer_time:{infer_time}')
     print(f'levenshtein:{levenshtein}')
     accuracy = n_correct / float(length_of_data) * 100
