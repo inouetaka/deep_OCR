@@ -158,8 +158,8 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
         #levenshtein = 1 - (1 / max([len(preds_str), len(labels)])) * (origin_edit)
         levenshtein = 1 - (sum(ED_list) / len(labels))
-        print(f'infer_time:{infer_time}')
-        print(f'levenshtein:{levenshtein}')
+    print(f'infer_time:{infer_time}')
+    print(f'levenshtein:{levenshtein}')
     accuracy = n_correct / float(length_of_data) * 100
     
     return valid_loss_avg.val(), accuracy, norm_ED, preds_str, labels, infer_time, length_of_data, forward_time_list
@@ -207,7 +207,6 @@ def test(opt):
         if opt.benchmark_all_eval:  # evaluation with 10 benchmark evaluation datasets
             benchmark_all_eval(model, criterion, converter, opt)
         else:
-            print('1111111')
             AlignCollate_evaluation = AlignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio_with_pad=opt.PAD)
             eval_data = hierarchical_dataset(root=opt.eval_data, opt=opt)
             evaluation_loader = torch.utils.data.DataLoader(
