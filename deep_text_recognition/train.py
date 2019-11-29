@@ -9,7 +9,6 @@ import argparse
 import matplotlib.pyplot as plt
 
 import torch
-print(torch.__version__)
 import torch.backends.cudnn as cudnn
 import torch.nn.init as init
 import torch.optim as optim
