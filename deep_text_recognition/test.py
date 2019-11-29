@@ -10,6 +10,7 @@ import torch.backends.cudnn as cudnn
 import torch.utils.data
 import numpy as np
 from nltk.metrics.distance import edit_distance
+import torch.nn.functional as F
 
 from utils import CTCLabelConverter, AttnLabelConverter, Averager
 from dataset import hierarchical_dataset, AlignCollate
@@ -21,8 +22,6 @@ def benchmark_all_eval(model, criterion, converter, opt, calculate_infer_time=Fa
     """ evaluation with 10 benchmark evaluation datasets """
     # The evaluation datasets, dataset order is same with Table 1 in our paper.
     eval_data_list = ['origin']
-    #eval_data_list = ['IIIT5k_3000', 'SVT', 'IC03_860', 'IC03_867', 'IC13_857',
-                      #'IC13_1015', 'IC15_1811', 'IC15_2077', 'SVTP', 'CUTE80', 'origin']
 
     if calculate_infer_time:
         evaluation_batch_size = 1  # batch_size should be 1 to calculate the GPU inference time per image.
@@ -44,7 +43,7 @@ def benchmark_all_eval(model, criterion, converter, opt, calculate_infer_time=Fa
             num_workers=int(opt.workers),
             collate_fn=AlignCollate_evaluation, pin_memory=True)
 
-        _, accuracy_by_best_model, norm_ED_by_best_model, PRED, gt, infer_time, length_of_data, forward_time_list = validation(
+        _, accuracy_by_best_model, norm_ED_by_best_model, _, _, _, infer_time, length_of_data, forward_time_list = validation(
             model, criterion, evaluation_loader, converter, opt)
         list_accuracy.append(f'{accuracy_by_best_model:0.3f}')
         total_forward_time += infer_time
@@ -53,19 +52,7 @@ def benchmark_all_eval(model, criterion, converter, opt, calculate_infer_time=Fa
         print('Acc %0.3f\t normalized_ED %0.3f' % (accuracy_by_best_model, norm_ED_by_best_model))
         print(forward_time_list)
         print('-' * 80)
-    
-    print('PRED_LEN:{} | GT_LEN:{}'.format(len(PRED), len(gt)))
-    LS_list = []
-    for PRED, gt, forward_time in zip(PRED, gt, forward_time_list):
-        LS = edit_distance(PRED, gt) / max([len(PRED), len(gt)])
-        LS_list.append(LS)
-        print('-*'*45)
-        print('{}番目'.format(len(LS_list)))
-        print('PRED:{}\n GT:{}\n edit_dis:{}\n'.format(PRED, gt, LS))
-        print(forward_time)
-    print('NORM: {}'.format(1 - (sum(LS_list) / len(LS_list))))
-    
-    print("TOTAL_TIME", total_forward_time)
+
     averaged_forward_time = total_forward_time / total_evaluation_data_number * 1000
     total_accuracy = total_correct_number / total_evaluation_data_number
     params_num = sum([np.prod(p.size()) for p in model.parameters()])
@@ -89,8 +76,6 @@ def validation(model, criterion, evaluation_loader, converter, opt):
     length_of_data = 0
     infer_time = 0
     valid_loss_avg = Averager()
-    pred_list = []
-    gt_list = []
     for i, (image_tensors, labels) in enumerate(evaluation_loader):
         batch_size = image_tensors.size(0)
         length_of_data = length_of_data + batch_size
@@ -108,7 +93,6 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             # Calculate evaluation loss for CTC deocder.
             preds_size = torch.IntTensor([preds.size(1)] * batch_size)
             preds = preds.permute(1, 0, 2)  # to use CTCloss format
-            # print(f'{i}epoch\tbatch_size:{batch_size}\tforward_time:{forward_time}')            
 
             # To avoid ctc_loss issue, disabled cudnn for the computation of the ctc_loss
             # https://github.com/jpuigcerver/PyLaia/issues/16
@@ -120,8 +104,6 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             _, preds_index = preds.max(2)
             preds_index = preds_index.transpose(1, 0).contiguous().view(-1)
             preds_str = converter.decode(preds_index.data, preds_size.data)
-            pred_list.append(preds_str)
-            gt_list.append(labels)
         else:
             preds = model(image, text_for_pred, is_train=False)
             forward_time = time.time() - start_time
@@ -138,11 +120,17 @@ def validation(model, criterion, evaluation_loader, converter, opt):
         valid_loss_avg.add(cost)
 
         # calculate accuracy.
+        preds_prob = F.softmax(preds, dim=2)
+        preds_max_prob, _ = preds_prob.max(dim=2)
+        confidence_score_list = []
         sum_ed = 0
-        for pred, gt in zip(preds_str, labels):
+        for pred, gt, preds_max_prob in zip(preds_str, labels, preds_max_prob):
             if 'Attn' in opt.Prediction:
-                pred = pred[:pred.find('[s]')]  # prune after "end of sentence" token ([s])
                 gt = gt[:gt.find('[s]')]
+                pred_EOS = pred.find('[s]')
+                pred = pred[:pred_EOS]  # prune after "end of sentence" token ([s])
+                pred_max_prob = pred_max_prob[:pred_EOS]
+
             if pred == gt:
                 n_correct += 1
             if len(gt) == 0:
@@ -151,28 +139,33 @@ def validation(model, criterion, evaluation_loader, converter, opt):
                 edit = edit_distance(pred, gt) / len(gt)
                 norm_ED += edit
 
+            # calculate confidence score (= multiply of pred_max_prob)
+            try:
+                confidence_score = pred_max_prob.cumprod(dim=0)[-1]
+            except:
+                confidence_score = 0  # for empty pred case, when prune after "end of sentence" token ([s])
+            confidence_score_list.append(confidence_score)
+
             edit = edit_distance(pred, gt)
             max_len = max(len(pred), len(gt))
             sum_ed += edit / max_len
+
         levenshtein = 1 - (1 / max([len(preds_str), len(labels)])) * sum_ed
+
     print(f'infer_time:{infer_time}')
     print(f'levenshtein:{levenshtein}')
     accuracy = n_correct / float(length_of_data) * 100
     
-    return valid_loss_avg.val(), accuracy, norm_ED, preds_str, labels, infer_time, length_of_data, forward_time_list
+    return valid_loss_avg.val(), accuracy, norm_ED, preds_str, confidence_score_list, labels, infer_time, length_of_data, forward_time_list
 
 
 def test(opt):
     """ model configuration """
-    #with open(opt.character, 'r') as txt:
-    #    words = txt.read()
-
     if 'CTC' in opt.Prediction:
         converter = CTCLabelConverter(opt.character)
     else:
         converter = AttnLabelConverter(opt.character)
     opt.num_class = len(converter.character)
-    #print(converter.character)
 
     if opt.rgb:
         opt.input_channel = 3
@@ -211,7 +204,7 @@ def test(opt):
                 shuffle=False,
                 num_workers=int(opt.workers),
                 collate_fn=AlignCollate_evaluation, pin_memory=True)
-            _, accuracy_by_best_model, norm_ED, _, _, _, _, forward_time_list = validation(
+            _, accuracy_by_best_model, norm_ED, _, _, _, _, _, forward_time_list = validation(
                 model, criterion, evaluation_loader, converter, opt)
             print(f'acc:{accuracy_by_best_model}')
             with open('./result/{0}/log_evaluation.txt'.format(opt.experiment_name), 'a') as log:
@@ -249,7 +242,6 @@ if __name__ == '__main__':
 
     """ vocab / character number configuration """
     if opt.sensitive:
-        #opt.character = string.printable[:-6]  # same with ASTER setting (use 94 char).
         with open('japanese_word/japanese_word.txt', 'r')as ja:
             opt.character = ja.read() 
 
