@@ -206,20 +206,24 @@ def test(opt):
                 num_workers=int(opt.workers),
                 collate_fn=AlignCollate_evaluation, pin_memory=True)
             get_data = time.time() - start
-            _, accuracy_by_best_model, norm_ED, _, _, _, _, _, forward_time_list = validation(
+            _, accuracy_by_best_model, norm_ED, preds_str, _, labels, infer_time, _, forward_time_list = validation(
                 model, criterion, evaluation_loader, converter, opt)
+
+            for pred, label in zip(preds_str, labels):
+                print(pred, label)
 
             forward_time = time.time() - start
 
+            print("infer_time{:.5}[sec]".format(infer_time))
             print(f'acc:{accuracy_by_best_model}')
             with open('./result/{0}/log_evaluation.txt'.format(opt.experiment_name), 'a') as log:
                 log.write(str(accuracy_by_best_model) + '\n')
 
-        print('*' * 80)
-        print('get_dta_time:{:.5f}[sec]'.format(get_data))
-        print('only_infer_time:{:.5f}[sec]'.format(forward_time - get_data))
-        print('total_time:{:.5f}[sec]'.format(forward_time))
-        print('*' * 80)
+            print('*' * 80)
+            print('get_dta_time:{:.5f}[sec]'.format(get_data))
+            print('only_infer_time:{:.5f}[sec]'.format(forward_time - get_data))
+            print('total_time:{:.5f}[sec]'.format(forward_time))
+            print('*' * 80)
 
 
 if __name__ == '__main__':
