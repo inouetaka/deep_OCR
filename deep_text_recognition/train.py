@@ -71,7 +71,7 @@ def train(opt):
     model = torch.nn.DataParallel(model).to(device)
     model.train()
     if opt.saved_model != '':
-        print(f'loading pretrained model from {opt.continue_model}')
+        print(f'loading pretrained model from {opt.saved_mode}')
         if opt.FT:
             model.load_state_dict(torch.load(opt.saved_model), strict=False)
         else:
