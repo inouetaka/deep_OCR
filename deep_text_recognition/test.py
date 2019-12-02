@@ -90,23 +90,20 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             preds = model(image, text_for_pred).log_softmax(2)
             forward_time = time.time() - start_time
             forward_time_list.append(forward_time)
+
             # Calculate evaluation loss for CTC deocder.
             preds_size = torch.IntTensor([preds.size(1)] * batch_size)
-            preds = preds.permute(1, 0, 2)  # to use CTCloss format
-
-            # To avoid ctc_loss issue, disabled cudnn for the computation of the ctc_loss
-            # https://github.com/jpuigcerver/PyLaia/issues/16
-            torch.backends.cudnn.enabled = False
-            cost = criterion(preds, text_for_loss, preds_size, length_for_loss)
-            torch.backends.cudnn.enabled = True
+            # permute 'preds' to use CTCloss format
+            cost = criterion(preds.permute(1, 0, 2), text_for_loss, preds_size, length_for_loss)
 
             # Select max probabilty (greedy decoding) then decode index to character
             _, preds_index = preds.max(2)
-            preds_index = preds_index.transpose(1, 0).contiguous().view(-1)
+            preds_index = preds_index.view(-1)
             preds_str = converter.decode(preds_index.data, preds_size.data)
         else:
             preds = model(image, text_for_pred, is_train=False)
             forward_time = time.time() - start_time
+            forward_time_list.append(forward_time)
 
             preds = preds[:, :text_for_loss.shape[1] - 1, :]
             target = text_for_loss[:, 1:]  # without [GO] Symbol
@@ -136,8 +133,7 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             if len(gt) == 0:
                 norm_ED += 1
             else:
-                edit = edit_distance(pred, gt) / len(gt)
-                norm_ED += edit
+                norm_ED = edit_distance(pred, gt) / len(gt)
 
             # calculate confidence score (= multiply of pred_max_prob)
             try:
