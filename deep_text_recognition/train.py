@@ -118,8 +118,8 @@ def train(opt):
     """ start training """
     start_iter = 0
     if opt.saved_model != '':
-        print(opt.continue_model.split('_')[-1])
-        print(opt.continue_model.split('_')[-1].split('.')[0])
+        print(opt.saved_model.split('_')[-1])
+        print(opt.saved_model.split('_')[-1].split('.')[0])
         start_iter = int(opt.saved_model.split('_')[-1].split('.')[0])
         print(f'continue to train, start_iter: {start_iter}')
 
