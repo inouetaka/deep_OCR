@@ -92,12 +92,12 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
             # Calculate evaluation loss for CTC deocder.
             preds_size = torch.IntTensor([preds.size(1)] * batch_size)
+            preds = preds.permute(1, 0, 2)  # to use CTCloss format
             # permute 'preds' to use CTCloss format
-            cost = criterion(preds.permute(1, 0, 2), text_for_loss, preds_size, length_for_loss)
 
             # Select max probabilty (greedy decoding) then decode index to character
             _, preds_index = preds.max(2)
-            preds_index = preds_index.view(-1)
+            preds_index = preds_index.transpose(1, 0).contiguous().view(-1)
             preds_str = converter.decode(preds_index.data, preds_size.data)
         else:
             preds = model(image, text_for_pred, is_train=False)
