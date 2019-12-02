@@ -70,12 +70,9 @@ def train(opt):
     # マルチGPUのデータ並列
     model = torch.nn.DataParallel(model).to(device)
     model.train()
-    if opt.saved_model != '':
+    if opt.continue_model != '':
         print(f'loading pretrained model from {opt.saved_model}')
-        if opt.FT:
-            model.load_state_dict(torch.load(opt.saved_model), strict=False)
-        else:
-            model.load_state_dict(torch.load(opt.saved_model))
+        model.load_state_dict(torch.load(opt.saved_model))
     #print("Model:")
     #print(model)
 
@@ -117,10 +114,10 @@ def train(opt):
 
     """ start training """
     start_iter = 0
-    if opt.saved_model != '':
+    if opt.continue_model != '':
         print(opt.saved_model.split('_')[-1])
         print(opt.saved_model.split('_')[-1].split('.')[0])
-        start_iter = int(opt.saved_model.split('_')[-1].split('.')[0])
+        start_iter = int(opt.continue_model.split('_')[-1].split('.')[0])
         print(f'continue to train, start_iter: {start_iter}')
 
     start_time = time.time()
@@ -141,13 +138,13 @@ def train(opt):
 
         if 'CTC' in opt.Prediction:
             preds = model(image, text).log_softmax(2)
-            preds_size = torch.IntTensor([preds.size(1)] * batch_size)
+            preds_size = torch.IntTensor([preds.size(1)] * batch_size).to(device)
             preds = preds.permute(1, 0, 2)  # to use CTCLoss format
 
             # ctc_lossの問題を回避するため、ctc_lossの計算でcudnnを無効にしました
             # https://github.com/jpuigcerver/PyLaia/issues/16
             torch.backends.cudnn.enabled = False
-            cost = criterion(preds, text.to(device), preds_size.to(device), length.to(device))
+            cost = criterion(preds, text, preds_size, length)
             torch.backends.cudnn.enabled = True
 
         else:
@@ -172,18 +169,28 @@ def train(opt):
             print(f'[{i}/{opt.num_iter}] Loss: {loss_avg.val():0.5f} elapsed_time: {elapsed_time:0.5f}')
             # for log
             with open(f'./saved_models/{opt.experiment_name}/log_train.txt', 'a') as log:
+                log.write(f'[{i}/{opt.num_iter}] Loss: {loss_avg.val():0.5f} elapsed_time: {elapsed_time:0.5f}\n')
+                loss_avg.reset()
                 model.eval()
                 with torch.no_grad():
-                    valid_loss, current_accuracy, current_norm_ED, preds, confidence_score, labels, infer_time, length_of_data, _ = validation(model, criterion, valid_loader, converter, opt)
+                    valid_loss, current_accuracy, current_norm_ED, preds, labels, infer_time, length_of_data, _ = validation(model, criterion, valid_loader, converter, opt)
                 valid_loss_list.append(valid_loss.item())
                 valid_acc_list.append(current_accuracy)
                 model.train()
 
-                # training loss and validation loss
-                current_model_log = f'{"Current_accuracy":17s}: {current_accuracy:0.5f}, {"Current_norm_ED":17s}: {current_norm_ED:0.2f}'
-                print(current_model_log)
-                log.write(current_model_log + '\n')
-                loss_avg.reset()
+                for pred, gt in zip(preds[:5], labels[:5]):
+                    if 'Attn' in opt.Prediction:
+                        pred = pred[:pred.find('[s]')]
+                        gt = gt[:gt.find('[s]')]
+
+                    print(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}')
+                    log.write(f'{pred:20s}, gt: {gt:20s},   {str(pred == gt)}\n')
+
+                valid_log = f'[{i}/{opt.num_iter}] valid loss: {valid_loss:0.5f}'
+                valid_log += f' accuracy: {current_accuracy:0.3f}, norm_ED: {current_norm_ED:0.2f}'
+                print(f'accuracy: {current_accuracy:0.3f}, norm_ED: {current_norm_ED:0.2f}')
+
+                log.write(valid_log + '\n')
 
                 # keep best accuracy model
                 if current_accuracy > best_accuracy:
@@ -196,24 +203,6 @@ def train(opt):
                 print(best_model_log)
                 log.write(best_model_log + '\n')
 
-                print('-' * 80)
-                print(f'{"Ground Truth":25s} | {"Prediction":25s} | Confidence Score & T/F')
-                log.write(f'{"Ground Truth":25s} | {"Prediction":25s} | {"Confidence Score"}\n')
-                print('-' * 80)
-                for pred, gt, confidence in zip(preds[:5], labels[:5], confidence_score[:5]):
-                    if 'Attn' in opt.Prediction:
-                        pred = pred[:pred.find('[s]')]
-                        gt = gt[:gt.find('[s]')]
-
-                    print(f'{gt:25s} | {pred:25s} | {confidence:0.4f}\t{str(pred == gt)}')
-                    log.write(f'{gt:25s} | {pred:25s} | {confidence:0.4f}\t{str(pred == gt)}\n')
-
-
-                valid_log = f'[{i}/{opt.num_iter}] valid loss: {valid_loss:0.5f}'
-                valid_log += f' accuracy: {current_accuracy:0.3f}, norm_ED: {current_norm_ED:0.2f}'
-
-                log.write(valid_log + '\n')
-                print('-' * 40, f'{i}iter', '-' * 40, '\n')
         # save model per 1e+5 iter.
         if (i + 1) % 1e+3 == 0:
             torch.save(model.state_dict(), f'./saved_models/{opt.experiment_name}/iter_{i+1}.pth')
@@ -242,8 +231,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=192, help='input batch size')
     parser.add_argument('--num_iter', type=int, default=300000, help='number of iterations to train for')
     parser.add_argument('--valInterval', type=int, default=2000, help='Interval between each validation')
-    parser.add_argument('--saved_model', default='', help="path to model to continue training")
-    parser.add_argument('--FT', action='store_true', help='whether to do fine-tuning')
+    parser.add_argument('--continue_model', default='', help="path to model to continue training")
     parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is Adadelta)')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--rho', type=float, default=0.95, help='decay rate rho for Adadelta. default=0.95')

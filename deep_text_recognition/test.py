@@ -10,7 +10,6 @@ import torch.backends.cudnn as cudnn
 import torch.utils.data
 import numpy as np
 from nltk.metrics.distance import edit_distance
-import torch.nn.functional as F
 
 from utils import CTCLabelConverter, AttnLabelConverter, Averager
 from dataset import hierarchical_dataset, AlignCollate
@@ -43,7 +42,7 @@ def benchmark_all_eval(model, criterion, converter, opt, calculate_infer_time=Fa
             num_workers=int(opt.workers),
             collate_fn=AlignCollate_evaluation, pin_memory=True)
 
-        _, accuracy_by_best_model, norm_ED_by_best_model, _, _, _, infer_time, length_of_data, forward_time_list = validation(
+        _, accuracy_by_best_model, norm_ED_by_best_model, _, _, infer_time, length_of_data, forward_time_list = validation(
             model, criterion, evaluation_loader, converter, opt)
         list_accuracy.append(f'{accuracy_by_best_model:0.3f}')
         total_forward_time += infer_time
@@ -117,16 +116,11 @@ def validation(model, criterion, evaluation_loader, converter, opt):
         valid_loss_avg.add(cost)
 
         # calculate accuracy.
-        preds_prob = F.softmax(preds, dim=2)
-        preds_max_prob, _ = preds_prob.max(dim=2)
-        confidence_score_list = []
         sum_ed = 0
-        for pred, gt, preds_max_prob in zip(preds_str, labels, preds_max_prob):
+        for pred, gt in zip(preds_str, labels):
             if 'Attn' in opt.Prediction:
+                pred = pred[:pred.find('[s]')]  # prune after "end of sentence" token ([s])
                 gt = gt[:gt.find('[s]')]
-                pred_EOS = pred.find('[s]')
-                pred = pred[:pred_EOS]  # prune after "end of sentence" token ([s])
-                pred_max_prob = pred_max_prob[:pred_EOS]
 
             if pred == gt:
                 n_correct += 1
@@ -134,13 +128,6 @@ def validation(model, criterion, evaluation_loader, converter, opt):
                 norm_ED += 1
             else:
                 norm_ED = edit_distance(pred, gt) / len(gt)
-
-            # calculate confidence score (= multiply of pred_max_prob)
-            try:
-                confidence_score = pred_max_prob.cumprod(dim=0)[-1]
-            except:
-                confidence_score = 0  # for empty pred case, when prune after "end of sentence" token ([s])
-            confidence_score_list.append(confidence_score)
 
             edit = edit_distance(pred, gt)
             max_len = max(len(pred), len(gt))
@@ -152,7 +139,7 @@ def validation(model, criterion, evaluation_loader, converter, opt):
     print(f'levenshtein:{levenshtein}')
     accuracy = n_correct / float(length_of_data) * 100
     
-    return valid_loss_avg.val(), accuracy, norm_ED, preds_str, confidence_score_list, labels, infer_time, length_of_data, forward_time_list
+    return valid_loss_avg.val(), accuracy, norm_ED, preds_str, labels, infer_time, length_of_data, forward_time_list
 
 
 def test(opt):
@@ -202,7 +189,7 @@ def test(opt):
                 num_workers=int(opt.workers),
                 collate_fn=AlignCollate_evaluation, pin_memory=True)
             get_data = time.time() - start
-            _, accuracy_by_best_model, norm_ED, preds_str, _, labels, infer_time, _, forward_time_list = validation(
+            _, accuracy_by_best_model, norm_ED, preds_str, labels, infer_time, _, forward_time_list = validation(
                 model, criterion, evaluation_loader, converter, opt)
 
             for pred, label in zip(preds_str, labels):
