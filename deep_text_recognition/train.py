@@ -188,7 +188,7 @@ def train(opt):
 
                 valid_log = f'[{i}/{opt.num_iter}] valid loss: {valid_loss:0.5f}'
                 valid_log += f' accuracy: {current_accuracy:0.3f}, norm_ED: {current_norm_ED:0.2f}'
-                print(f'accuracy: {current_accuracy:0.3f}, norm_ED: {current_norm_ED:0.2f}')
+                print(valid_log)
 
                 log.write(valid_log + '\n')
 
