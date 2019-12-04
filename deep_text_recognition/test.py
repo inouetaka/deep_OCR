@@ -147,12 +147,14 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
 def test(opt):
     """ model configuration """
+    #with open(opt.character, 'r') as txt:
+    #    words = txt.read()
     if 'CTC' in opt.Prediction:
         converter = CTCLabelConverter(opt.character)
     else:
         converter = AttnLabelConverter(opt.character)
     opt.num_class = len(converter.character)
-
+    #print(converter.character)
     if opt.rgb:
         opt.input_channel = 3
     model = Model(opt)
@@ -160,26 +162,21 @@ def test(opt):
           opt.hidden_size, opt.num_class, opt.batch_max_length, opt.Transformation, opt.FeatureExtraction,
           opt.SequenceModeling, opt.Prediction)
     model = torch.nn.DataParallel(model).to(device)
-
     # load model
     print('loading pretrained model from %s' % opt.saved_model)
     model.load_state_dict(torch.load(opt.saved_model, map_location='cpu'))
     opt.experiment_name = '_'.join(opt.saved_model.split('/')[1:])
     # print(model)
-
     """ keep evaluation model and result logs """
     os.makedirs(f'./result/{opt.experiment_name}', exist_ok=True)
     os.system(f'cp {opt.saved_model} ./result/{opt.experiment_name}/')
-
     """ setup loss """
     if 'CTC' in opt.Prediction:
         criterion = torch.nn.CTCLoss(zero_infinity=True).to(device)
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=0).to(device)  # ignore [GO] token = ignore index 0
-
     """ evaluation """
     model.eval()
-    start = time.time()
     with torch.no_grad():
         if opt.benchmark_all_eval:  # evaluation with 10 benchmark evaluation datasets
             benchmark_all_eval(model, criterion, converter, opt)
@@ -191,25 +188,11 @@ def test(opt):
                 shuffle=False,
                 num_workers=int(opt.workers),
                 collate_fn=AlignCollate_evaluation, pin_memory=True)
-            get_data = time.time() - start
-            _, accuracy_by_best_model, norm_ED, preds_str, labels, infer_time, _, forward_time_list = validation(
+            _, accuracy_by_best_model, norm_ED, _, _, _, _, forward_time_list = validation(
                 model, criterion, evaluation_loader, converter, opt)
-
-            for pred, label in zip(preds_str, labels):
-                print(pred, label)
-
-            forward_time = time.time() - start
-
-            print("infer_time{:.5}[sec]".format(infer_time))
             print(f'acc:{accuracy_by_best_model}')
             with open('./result/{0}/log_evaluation.txt'.format(opt.experiment_name), 'a') as log:
                 log.write(str(accuracy_by_best_model) + '\n')
-
-            print('*' * 80)
-            print('get_dta_time:{:.5f}[sec]'.format(get_data))
-            print('only_infer_time:{:.5f}[sec]'.format(forward_time - get_data))
-            print('total_time:{:.5f}[sec]'.format(forward_time))
-            print('*' * 80)
 
 
 if __name__ == '__main__':
