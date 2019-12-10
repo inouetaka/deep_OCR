@@ -32,8 +32,8 @@ def main(input_path, output_path, split_per, data_split):
             print(''.join([x.decode('utf8') for x in d.attrs['txt']]))
             label_list.append(''.join([x.decode('utf8') for x in d.attrs['txt']]))
             image_list.append(k)
-        print('label:')
-        print(['train', 'val', 'test'][d.attrs['label']])
+        #print('label:')
+        #print(['train', 'val', 'test'][d.attrs['label']])
 
     num = len(label_list)
     split_per = [float(x.strip()) for x in split_per.split(',')]
