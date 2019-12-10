@@ -117,9 +117,11 @@ def train(opt):
 
     """ start training """
     start_iter = 0
-    if opt.saved_model != '':
+    if opt.saved_model != '' and opt.FT is False:
         start_iter = int(opt.saved_model.split('_')[-1].split('.')[0])
         print(f'continue to train, start_iter: {start_iter}')
+    else:
+        print(f'continue to train, start_iter: {start_iter}')git
 
     start_time = time.time()
     best_accuracy = -1
