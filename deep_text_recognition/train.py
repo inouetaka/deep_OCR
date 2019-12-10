@@ -70,11 +70,14 @@ def train(opt):
     # マルチGPUのデータ並列
     model = torch.nn.DataParallel(model).to(device)
     model.train()
-    if opt.continue_model != '':
-        print(f'loading pretrained model from {opt.continue_model}')
-        model.load_state_dict(torch.load(opt.continue_model))
-    #print("Model:")
-    #print(model)
+    if opt.saved_model != '':
+        print(f'loading pretrained model from {opt.saved_model}')
+        if opt.FT:
+            model.load_state_dict(torch.load(opt.saved_model, map_location=device), strict=False)
+        else:
+            model.load_state_dict(torch.load(opt.saved_model, map_location=device))
+    print("Model:")
+    print(model)
 
     """ setup loss """
     if 'CTC' in opt.Prediction:
@@ -114,10 +117,8 @@ def train(opt):
 
     """ start training """
     start_iter = 0
-    if opt.continue_model != '':
-        print(opt.continue_model.split('_')[-1])
-        print(opt.continue_model.split('_')[-1].split('.')[0])
-        start_iter = int(opt.continue_model.split('_')[-1].split('.')[0])
+    if opt.saved_model != '':
+        start_iter = int(opt.saved_model.split('_')[-1].split('.')[0])
         print(f'continue to train, start_iter: {start_iter}')
 
     start_time = time.time()
@@ -138,13 +139,13 @@ def train(opt):
 
         if 'CTC' in opt.Prediction:
             preds = model(image, text).log_softmax(2)
-            preds_size = torch.IntTensor([preds.size(1)] * batch_size).to(device)
+            preds_size = torch.IntTensor([preds.size(1)] * batch_size)
             preds = preds.permute(1, 0, 2)  # to use CTCLoss format
 
             # ctc_lossの問題を回避するため、ctc_lossの計算でcudnnを無効にしました
             # https://github.com/jpuigcerver/PyLaia/issues/16
             torch.backends.cudnn.enabled = False
-            cost = criterion(preds, text, preds_size, length)
+            cost = criterion(preds, text.to(device), preds_size.to(device), length.to(device))
             torch.backends.cudnn.enabled = True
 
         else:
@@ -231,7 +232,8 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=192, help='input batch size')
     parser.add_argument('--num_iter', type=int, default=300000, help='number of iterations to train for')
     parser.add_argument('--valInterval', type=int, default=2000, help='Interval between each validation')
-    parser.add_argument('--continue_model', default='', help="path to model to continue training")
+    parser.add_argument('--saved_model', default='', help="path to model to continue training")
+    parser.add_argument('--FT', action='store_true', help='whether to do fine-tuning')
     parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is Adadelta)')
     parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for adam. default=0.9')
     parser.add_argument('--rho', type=float, default=0.95, help='decay rate rho for Adadelta. default=0.95')
