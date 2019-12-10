@@ -14,7 +14,7 @@ class TPS_SpatialTransformerNetwork(nn.Module):
         input:
             batch_I: バッチ入力画像 [batch_size x I_channel_num x I_height x I_width]
             I_size : 入力画像の(height, width)
-            I_r_size : 青龍画像I_rの(height, width)
+            I_r_size : 画像I_rの(height, width)
             I_channel_num : 入力画像Iのチャンネル数
         output:
             batch_I_r: 青龍画像[batch_size x I_channel_num x I_r_height x I_r_width]
