@@ -221,7 +221,7 @@ def train(opt):
         df['valid_loss'] = valid_loss_list
         df['acc'] = valid_acc_list
 
-        df.to_csv(f"./{opt.experiment_name}_log.csv", index=False)
+        df.to_csv(f"./saved_models/{opt.experiment_name}/{opt.experiment_name}_log.csv", index=False)
 
 
 if __name__ == '__main__':
