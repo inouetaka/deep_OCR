@@ -4,9 +4,8 @@ import os
 import sys
 import time
 import random
-import string
 import argparse
-import matplotlib.pyplot as plt
+from torch.utils.tensorboard import SummaryWriter
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -132,6 +131,7 @@ def train(opt):
     valid_loss_list = []
     valid_acc_list = []
     epoch_list = []
+    writer = SummaryWriter(log_dir="logs")
     while(True):
         # train part
         image_tensors, labels = train_dataset.get_batch()
@@ -159,7 +159,6 @@ def train(opt):
         cost.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), opt.grad_clip)  # gradient clipping with 5 (Default)
         optimizer.step()
-
  
         loss_avg.add(cost)
 
@@ -215,6 +214,10 @@ def train(opt):
             sys.exit()
         i += 1
 
+
+        writer.add_scalars('loss/train_valid', {'train_loss':cost.item(),
+                                                'valid_loss':valid_loss.item()}, i)
+
         df = pd.DataFrame()
         df['epoch'] = epoch_list
         df['train_loss'] = train_loss_list
@@ -222,6 +225,8 @@ def train(opt):
         df['acc'] = valid_acc_list
 
         df.to_csv(f"./saved_models/{opt.experiment_name}/{opt.experiment_name}_log.csv", index=False)
+
+    witer.close()
 
 
 if __name__ == '__main__':
