@@ -12,9 +12,10 @@
 *.csv
 
 # folder
-/self_write/
-/__pycache__/
-/tools/character_crawler/
+self_write/
+__pycache__/
+tools/character_crawler/
+tensorboard/
 
 !PaperImage/*.png
 !figure/*.png
