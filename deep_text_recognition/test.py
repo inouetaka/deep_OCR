@@ -162,7 +162,7 @@ def test(opt):
     model = torch.nn.DataParallel(model).to(device)
     # load model
     print('loading pretrained model from %s' % opt.saved_model)
-    model.load_state_dict(torch.load(opt.saved_model, map_location='cpu'))
+    model.load_state_dict(torch.load(opt.saved_model, map_location=device))
     opt.experiment_name = '_'.join(opt.saved_model.split('/')[1:])
     # print(model)
     """ keep evaluation model and result logs """
