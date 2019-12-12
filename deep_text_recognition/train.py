@@ -120,7 +120,7 @@ def train(opt):
         start_iter = int(opt.saved_model.split('_')[-1].split('.')[0])
         print(f'continue to train, start_iter: {start_iter}')
     else:
-        print(f'continue to train, start_iter: {start_iter}')
+        print(f'fine-tuning with {opt.saved_model}, start_iter: {start_iter}')
 
     start_time = time.time()
     best_accuracy = -1
@@ -131,7 +131,7 @@ def train(opt):
     valid_loss_list = []
     valid_acc_list = []
     epoch_list = []
-    writer = SummaryWriter(log_dir="logs")
+    writer = SummaryWriter(log_dir="tensorboard")
     while(True):
         # train part
         image_tensors, labels = train_dataset.get_batch()
@@ -178,6 +178,7 @@ def train(opt):
                     valid_loss, current_accuracy, current_norm_ED, preds, labels, infer_time, length_of_data, _ = validation(model, criterion, valid_loader, converter, opt)
                 valid_loss_list.append(valid_loss.item())
                 valid_acc_list.append(current_accuracy)
+                writer.add_scalars('accracy', {'accracy': current_accuracy}, i)
                 model.train()
 
                 for pred, gt in zip(preds[:5], labels[:5]):
@@ -215,8 +216,9 @@ def train(opt):
         i += 1
 
 
-        writer.add_scalars('loss/train_valid', {'train_loss':cost.item(),
-                                                'valid_loss':valid_loss.item()}, i)
+        writer.add_scalars('loss', {'train_loss':cost.item(),
+                                    'valid_loss':valid_loss.item()}, i)
+
 
         df = pd.DataFrame()
         df['epoch'] = epoch_list
