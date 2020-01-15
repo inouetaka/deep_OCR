@@ -44,9 +44,11 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
 
     nSamples = len(datalist)
     for i in range(nSamples):
-        imagePath, label = datalist[i].strip('\n').split('\t')
-        print(imagePath, label)
-        imagePath = os.path.join(inputPath, imagePath)
+        if "\t" in datalist:
+            imagePath, label = datalist[i].strip('\n').split('\t')
+            imagePath = os.path.join(inputPath, imagePath)
+        else:
+            print("例外処理", datalist)
 
         # # only use alphanumeric data
         # if re.search('[^a-zA-Z0-9]', label):
