@@ -44,7 +44,7 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
 
     nSamples = len(datalist)
     for i in range(nSamples):
-        if "\t" in datalist:
+        if "\t" in datalist[i]:
             imagePath, label = datalist[i].strip('\n').split('\t')
             imagePath = os.path.join(inputPath, imagePath)
         else:
