@@ -70,7 +70,6 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
                 with open(outputPath + '/error_image_log.txt', 'a') as log:
                     log.write('%s-th image data occured error\n' % str(i))
                 continue
-        print("エラー数:", error_count)
 
         imageKey = 'image-%09d'.encode() % cnt
         labelKey = 'label-%09d'.encode() % cnt
@@ -85,6 +84,7 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
     cache['num-samples'.encode()] = str(nSamples).encode()
     writeCache(env, cache)
     print('%d 個のサンプルでデータセットが作成されました。' % nSamples)
+    print(f"エラー数:{error_count}/[{nSamples}] {error_count/nSamples}")
 
 
 if __name__ == '__main__':
