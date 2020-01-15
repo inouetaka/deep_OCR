@@ -84,7 +84,7 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
     cache['num-samples'.encode()] = str(nSamples).encode()
     writeCache(env, cache)
     print('%d 個のサンプルでデータセットが作成されました。' % nSamples)
-    print(f"エラー数:{error_count}/[{nSamples}] {error_count/nSamples}")
+    print(f"エラー数:{error_count}/[{nSamples}] {(error_count/nSamples)*100}")
 
 
 if __name__ == '__main__':
