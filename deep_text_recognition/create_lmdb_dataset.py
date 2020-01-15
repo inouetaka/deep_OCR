@@ -48,7 +48,7 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
             imagePath, label = datalist[i].strip('\n').split('\t')
             imagePath = os.path.join(inputPath, imagePath)
         else:
-            print("例外処理", datalist)
+            print("例外処理", datalist[i])
 
         # # only use alphanumeric data
         # if re.search('[^a-zA-Z0-9]', label):
