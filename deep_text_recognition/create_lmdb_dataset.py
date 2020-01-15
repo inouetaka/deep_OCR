@@ -41,7 +41,7 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
 
     with open(gtFile, 'r', encoding='utf-8') as data:
         datalist = data.readlines()
-
+    error_count = 0
     nSamples = len(datalist)
     for i in range(nSamples):
         if "\t" in datalist[i]:
@@ -49,6 +49,7 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
             imagePath = os.path.join(inputPath, imagePath)
         else:
             print("例外処理", datalist[i])
+            error_count += 1
 
         # # only use alphanumeric data
         # if re.search('[^a-zA-Z0-9]', label):
@@ -69,6 +70,7 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
                 with open(outputPath + '/error_image_log.txt', 'a') as log:
                     log.write('%s-th image data occured error\n' % str(i))
                 continue
+        print("エラー数:", error_count)
 
         imageKey = 'image-%09d'.encode() % cnt
         labelKey = 'label-%09d'.encode() % cnt
