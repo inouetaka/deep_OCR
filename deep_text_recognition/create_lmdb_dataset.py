@@ -44,8 +44,8 @@ def createDataset(inputPath, gtFile, outputPath, checkValid=True):
 
     nSamples = len(datalist)
     for i in range(nSamples):
-        imagePath = datalist[i].strip('\n').split('\t')
-        print(imagePath)
+        imagePath, label = datalist[i].strip('\n').split('\t')
+        print(imagePath, label)
         imagePath = os.path.join(inputPath, imagePath)
 
         # # only use alphanumeric data
