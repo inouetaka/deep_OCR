@@ -16,6 +16,7 @@ self_write/
 __pycache__/
 tools/character_crawler/
 tensorboard/
+venv/
 
 !PaperImage/*.png
 !figure/*.png
