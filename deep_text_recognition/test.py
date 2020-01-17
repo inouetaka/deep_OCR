@@ -132,7 +132,8 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
             edit = edit_distance(pred, gt)
             max_len = max(len(pred), len(gt))
-            sum_ed += edit / max_len
+            print(edit, max_len)
+            #sum_ed += edit / max_len
 
         levenshtein = 1 - (1 / max([len(preds_str), len(labels)])) * sum_ed
 
