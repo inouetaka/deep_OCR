@@ -143,7 +143,7 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
 
     #eprint(f'infer_time:{infer_time}')
-    print(f'levenshtein:{levenshtein / float(length_of_data)}')
+    print(f'levenshtein:{(levenshtein / float(length_of_data)) * 100.0}')
     accuracy = n_correct / float(length_of_data) * 100
     
     return valid_loss_avg.val(), accuracy, norm_ED, preds_str, labels, infer_time, length_of_data, forward_time_list
