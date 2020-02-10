@@ -147,6 +147,8 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
 
     #eprint(f'infer_time:{infer_time}')
+    print("levenshtein", levenshtein)
+    print("length_of_data", length_of_data)
     print(f'levenshtein:{round((levenshtein / float(length_of_data)) * 100.0, 3)} %')
     accuracy = n_correct / float(length_of_data) * 100
     
