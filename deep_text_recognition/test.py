@@ -139,11 +139,11 @@ def validation(model, criterion, evaluation_loader, converter, opt):
         [print(f'predict: {p} | label: {l}\n') for p, l in zip(preds_str[:5], labels[:5])]
 
         levenshtein += sum_ed / len(preds_str)
-        print("バッチごとのleven: ", sum_ed / len(preds_str))
+        print("バッチごとのleven: ", round(sum_ed / len(preds_str), 3), "%")
 
 
     #eprint(f'infer_time:{infer_time}')
-    print(f'levenshtein:{(levenshtein / float(length_of_data)) * 100.0}')
+    print(f'levenshtein:{round((levenshtein / float(length_of_data)) * 100.0, 3)} %')
     accuracy = n_correct / float(length_of_data) * 100
     
     return valid_loss_avg.val(), accuracy, norm_ED, preds_str, labels, infer_time, length_of_data, forward_time_list
@@ -194,7 +194,7 @@ def test(opt):
                 collate_fn=AlignCollate_evaluation, pin_memory=True)
             _, accuracy_by_best_model, norm_ED, _, _, _, _, forward_time_list = validation(
                 model, criterion, evaluation_loader, converter, opt)
-            print(f'acc:{accuracy_by_best_model}')
+            print(f'acc:{accuracy_by_best_model} %')
             with open('./result/{0}/log_evaluation.txt'.format(opt.experiment_name), 'a') as log:
                 log.write(str(accuracy_by_best_model) + '\n')
 
