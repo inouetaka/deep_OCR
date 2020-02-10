@@ -136,7 +136,6 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             sum_ed += edit / max_len
             levenshtein += edit / max_len
 
-        print('-*'*75)
         [print(f'predict: {p} | label: {l}\n') for p, l in zip(preds_str[:5], labels[:5])]
 
         print("バッチごとのleven: ", round((sum_ed / len(preds_str)) * 100.0, 3), "%")
