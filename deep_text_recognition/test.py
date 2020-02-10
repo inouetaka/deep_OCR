@@ -135,21 +135,13 @@ def validation(model, criterion, evaluation_loader, converter, opt):
             max_len = max(len(pred), len(gt))
             sum_ed += edit / max_len
             levenshtein += edit / max_len
-            #print("sum_ed", sum_ed)
 
 
         [print(f'predict: {p} | label: {l}\n') for p, l in zip(preds_str[:5], labels[:5])]
 
-        #levenshtein += sum_ed / len(preds_str)
         print("バッチごとのleven: ", round((sum_ed / len(preds_str)) * 100.0, 3), "%")
-        print("sum_ed", sum_ed)
-        print("pred_str", len(preds_str))
-        print("levenshtein", levenshtein)
 
 
-    #eprint(f'infer_time:{infer_time}')
-    print("levenshtein", levenshtein)
-    print("length_of_data", length_of_data)
     print(f'levenshtein:{round((levenshtein / float(length_of_data)) * 100.0, 3)} %')
     accuracy = n_correct / float(length_of_data) * 100
     
