@@ -74,6 +74,7 @@ def validation(model, criterion, evaluation_loader, converter, opt):
     norm_ED = 0
     length_of_data = 0
     infer_time = 0
+    levenshtein = 0
     valid_loss_avg = Averager()
     for i, (image_tensors, labels) in enumerate(evaluation_loader):
         batch_size = image_tensors.size(0)
@@ -132,12 +133,17 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
             edit = edit_distance(pred, gt)
             max_len = max(len(pred), len(gt))
-            #sum_ed += edit / max_len
+            sum_ed += (edit / max_len) * 100.0
 
-        #levenshtein = 1 - (1 / max([len(preds_str), len(labels)])) * sum_ed
 
-    #print(f'infer_time:{infer_time}')
-    #print(f'levenshtein:{levenshtein}')
+        [print(f'predict: {p} | label: {l}\n') for p, l in zip(preds_str[:5], labels[:5])]
+
+        levenshtein += sum_ed / len(preds_str)
+        print("バッチごとのleven: ", sum_ed / len(preds_str))
+
+
+    #eprint(f'infer_time:{infer_time}')
+    print(f'levenshtein:{levenshtein / float(length_of_data)}')
     accuracy = n_correct / float(length_of_data) * 100
     
     return valid_loss_avg.val(), accuracy, norm_ED, preds_str, labels, infer_time, length_of_data, forward_time_list

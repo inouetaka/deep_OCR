@@ -16,7 +16,7 @@ if [ -n "$SAVED_MODELS" ]; then
     --batch_ratio 1.0 --Transformation TPS --FeatureExtraction ResNet \
     --SequenceModeling BiLSTM --Prediction CTC --experiment_name $EXPER_NAME \
     --num_iter $NUM_ITER --valInterval 100  --sensitive --rgb --workers 10 \
-    --continue_model saved_models/$SAVED_MODELS &
+    --saved__model saved_models/$SAVED_MODELS &
 
     echo -e "train_data:$TRAIN_DATA\\nvaldation_data:$VALID_DATA\\nmodel_name:$EXPER_NAME\\niteration:$NUM_ITER"
     echo "nohup.outにlogが出ます。"
