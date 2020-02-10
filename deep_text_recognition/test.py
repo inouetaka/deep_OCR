@@ -141,6 +141,9 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
         levenshtein += sum_ed / len(preds_str)
         print("バッチごとのleven: ", round((sum_ed / len(preds_str)) * 100.0, 3), "%")
+        print("sum_ed", sum_ed)
+        print("pred_str", preds_str)
+        print("levenshtein", levenshtein)
 
 
     #eprint(f'infer_time:{infer_time}')
