@@ -48,6 +48,8 @@ def main(input_path, output_path, split_per, data_split):
     train_l, test_l, valid_l = np.split(c_labels, per)
     train_i, test_i, valid_i = np.split(images, per)
 
+    print(c_labels)
+
     if data_split:
         train = dict(zip(train_l, train_i))
         test = dict(zip(test_l, test_i))
