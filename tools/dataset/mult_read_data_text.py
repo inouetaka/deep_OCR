@@ -39,7 +39,9 @@ def main(input_path, output_path, split_per, data_split):
 
     for l in labels:
         split_label = l.split("\n")
-        label = "".join(split_label)
+        split_label = "".join(split_label)
+        label = split_label.split("\t")
+        label = "".join(label)
         c_labels.append(label)
 
     num = len(c_labels)
@@ -47,8 +49,6 @@ def main(input_path, output_path, split_per, data_split):
     per = [int(len(c_labels) * n) for n in [split_per[0], split_per[0] + split_per[1]]]
     train_l, test_l, valid_l = np.split(c_labels, per)
     train_i, test_i, valid_i = np.split(images, per)
-
-    print(c_labels)
 
     if data_split:
         train = dict(zip(train_l, train_i))
