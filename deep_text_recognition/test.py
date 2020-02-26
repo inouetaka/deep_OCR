@@ -133,15 +133,15 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
             edit = edit_distance(pred, gt)
             max_len = max(len(pred), len(gt))
-            #sum_ed += edit / max_len
-            #levenshtein += edit / max_len
+            sum_ed += edit / max_len
+            levenshtein += edit / max_len
 
         [print(f'predict: {p} | label: {l}\n') for p, l in zip(preds_str[:5], labels[:5])]
 
-        #print("バッチごとのleven: ", round((sum_ed / len(preds_str)) * 100.0, 3), "%")
+        print("バッチごとのleven: ", round((sum_ed / len(preds_str)) * 100.0, 3), "%")
         print('-*' * 75)
 
-    #print(f'levenshtein:{round((levenshtein / float(length_of_data)) * 100.0, 3)} %')
+    print(f'levenshtein:{round((levenshtein / float(length_of_data)) * 100.0, 3)} %')
     accuracy = n_correct / float(length_of_data) * 100
     
     return valid_loss_avg.val(), accuracy, norm_ED, preds_str, labels, infer_time, length_of_data, forward_time_list
